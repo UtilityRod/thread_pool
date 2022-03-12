@@ -1,5 +1,7 @@
 CFLAGS = -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
-INCLUDE = -I ../include/
+INCLUDE = -I../include/ -I../thread_pool/ -I../dstructs/
+export CFLAGS
+export INCLUDE
 
 .PHONY: all
 all: src dstruct thread_pool test
