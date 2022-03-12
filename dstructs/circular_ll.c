@@ -20,23 +20,16 @@ circular_list_t * circular_create(compare_f compare, destroy_f destroy)
 {
     circular_list_t * p_list = NULL;
 
-    if (compare == NULL)
+    p_list = calloc(sizeof(*p_list), 1);
+    if (p_list == NULL)
     {
-        fputs("Compare function for linked list must not be NULL.\n", stderr);
+        // Memory allocation failed.
+        perror("Linked list memory allocation.\n");
     }
     else
     {
-        p_list = calloc(sizeof(*p_list), 1);
-        if (p_list == NULL)
-        {
-            // Memory allocation failed.
-            perror("Linked list memory allocation.\n");
-        }
-        else
-        {
-            p_list->compare = compare; // Function to compare node data
-            p_list->destroy = destroy; // Function to destroy node data if needed
-        }
+        p_list->compare = compare; // Function to compare node data
+        p_list->destroy = destroy; // Function to destroy node data if needed
     }
     
     return p_list;
@@ -119,10 +112,14 @@ size_t circular_insert(circular_list_t * p_list, void * p_data, location_t locat
 void * circular_search(circular_list_t * p_list, void * p_data)
 {
     node_t * p_search = NULL;
-    if (p_list->p_head == NULL)
+    if ((p_list == NULL) || (p_list->p_head == NULL))
     {
         // Linked list is empty
         fputs("Circular Linked List is Empty\n", stderr);
+    }
+    else if (p_list->compare == NULL)
+    {
+        fputs("Must register a compare function for linked list before searching.\n", stderr);
     }
     else
     {
@@ -265,9 +262,13 @@ void * circular_remove_at(circular_list_t * p_list, location_t location)
 
 void circular_ll_sort(circular_list_t * p_list)
 {
-    if (p_list->p_head == NULL)
+    if ((p_list == NULL) || (p_list->p_head == NULL))
     {
         fputs("Circular Linked List is Empty\n", stderr);
+    }
+    else if (p_list->compare == NULL)
+    {
+        fputs("Must register a compare function with list before sorting.\n", stderr);
     }
     else
     {

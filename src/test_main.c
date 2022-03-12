@@ -1,18 +1,5 @@
 #include <test_main.h>
 
-static int compare(const void * arg1, const void * arg2)
-{
-    (void)arg1;
-    (void)arg2;
-    return 0;
-}
-
-static void destroy(void * arg)
-{
-    (void)arg;
-    return;
-}
-
 static void * pthread_function(void * arg)
 {
     int * int_arg = (int *)arg;
@@ -23,7 +10,7 @@ static void * pthread_function(void * arg)
 int main(void)
 {
     printf("Hello from test main.\n");
-    thread_pool_t * p_pool = pool_create(5, compare, destroy, pthread_function);
+    thread_pool_t * p_pool = pool_create(5, pthread_function);
 
     int array[100];
 

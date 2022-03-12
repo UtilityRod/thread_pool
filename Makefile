@@ -1,17 +1,23 @@
-CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
+CFLAGS = -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
 INCLUDE = -I ../include/
 
 .PHONY: all
-all: objects dstruct test
+all: src dstruct thread_pool test
 
 test:
-	$(CC) $(CFLAGS) $(INCLUDE) -o test ./obj/test_main.o ./obj/thread_pool.o ./obj/circular_ll.o ./obj/queue.o -pthread
+	$(CC) $(CFLAGS) $(INCLUDE) -o test $(wildcard ./obj/*.o) -pthread
 
-objects:
+.PHONY: src
+src:
 	$(MAKE) -C ./src/
 
+.PHONY: dstruct
 dstruct:
 	$(MAKE) -C ./dstructs/
+
+.PHONY: thread_pool
+thread_pool:
+	$(MAKE) -C ./thread_pool/
 
 .PHONY: debug
 debug: CFLAGS += -g

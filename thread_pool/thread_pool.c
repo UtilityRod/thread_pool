@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 struct thread_pool_ {
-    uint32_t num_threads;
+    uint32_t num_threads; // The total amount of threads to spawn
     queue_t * p_queue;
     pthread_t * p_threads;
     pthread_mutex_t lock;
@@ -13,7 +13,7 @@ struct thread_pool_ {
 
 static void * thread_private(void * p_arg);
 
-thread_pool_t * pool_create(uint32_t num_threads, compare_f compare, destroy_f destroy, pthread_f function)
+thread_pool_t * pool_create(uint32_t num_threads, pthread_f function)
 {
     thread_pool_t * p_pool = calloc(sizeof(*p_pool), 1);
 
@@ -28,7 +28,7 @@ thread_pool_t * pool_create(uint32_t num_threads, compare_f compare, destroy_f d
         p_pool->conditional_var = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
         p_pool->function = function;
         pthread_mutex_lock(&(p_pool->lock));
-        p_pool->p_queue = queue_create(compare, destroy);
+        p_pool->p_queue = queue_create(NULL, NULL);
         p_pool->p_threads = calloc(sizeof(pthread_t *), num_threads);
 
         if ((p_pool->p_threads == NULL) || (p_pool->p_queue == NULL))
