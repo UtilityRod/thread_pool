@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
+CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
 INCLUDE = -I ../include/
 
 .PHONY: all

@@ -16,7 +16,7 @@ static void destroy(void * arg)
 static void * pthread_function(void * arg)
 {
     int * int_arg = (int *)arg;
-    printf("Inside of pthread_function: %d\n", *int_arg);
+    printf("Hello from thread %d\n", *int_arg);
     return NULL;
 }
 
@@ -24,25 +24,15 @@ int main(void)
 {
     printf("Hello from test main.\n");
     thread_pool_t * p_pool = pool_create(5, compare, destroy, pthread_function);
-    int one = 1;
-    int two = 2;
-    int three = 3;
-    int four = 4;
-    int five = 5;
-    sleep(3);
-    printf("Adding one to pool\n");
-    pool_add_work(p_pool, &one);
-    sleep(3);
-    printf("Adding two to pool\n");
-    pool_add_work(p_pool, &two);
-    printf("Adding three to pool\n");
-    pool_add_work(p_pool, &three);
-    sleep(3);
-    printf("Adding four to pool\n");
-    pool_add_work(p_pool, &four);
-    sleep(3);
-    printf("Adding five to pool\n");
-    pool_add_work(p_pool, &five);
+
+    int array[100];
+
+    for(int i = 1; i <= 100; i++)
+    {
+        array[i - 1] = i;
+        pool_add_work(p_pool, &(array[i-1]));
+    }
+
     sleep(5);
     pool_destroy(p_pool);
 }

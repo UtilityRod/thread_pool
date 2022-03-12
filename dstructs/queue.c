@@ -43,7 +43,7 @@ size_t queue_enqueue(queue_t * p_queue, void * p_data)
 
     if (p_queue && p_queue->p_list)
     {
-        p_queue->size = circular_insert(p_queue->p_list, p_data, true);
+        p_queue->size = circular_insert(p_queue->p_list, p_data, FRONT);
     }
 
     return p_queue->size;

@@ -67,7 +67,7 @@ void circular_destroy(circular_list_t * p_list)
     free(p_list);
 }
 
-size_t circular_insert(circular_list_t * p_list, void * p_data, bool add_front)
+size_t circular_insert(circular_list_t * p_list, void * p_data, location_t location)
 {
     if (p_list != NULL && p_data != NULL)
     {
@@ -98,7 +98,7 @@ size_t circular_insert(circular_list_t * p_list, void * p_data, bool add_front)
                     p_new->p_next = p_list->p_head;
                 }
 
-                if (add_front == true)
+                if (location == FRONT)
                 {
                     // Adding node to the front
                     // Update list head pointer to new node
