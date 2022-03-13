@@ -4,5 +4,7 @@
 #include <stdio.h>
 #include <thread_pool.h>
 #include <unistd.h>
+#include <signal.h>
+#include <stdlib.h>
 
 #endif

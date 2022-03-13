@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <signal.h>
+
 struct thread_pool_ {
     uint32_t num_threads; // The total amount of threads to spawn
     queue_t * p_queue; // Queue that works get added to
@@ -12,9 +14,13 @@ struct thread_pool_ {
 };
 
 static void * thread_private(void * p_arg);
+static void establish_handler(int sig, void (*func)(int));
+static void signal_handler(int sig);
+volatile sig_atomic_t exit_flag = 0;
 
 thread_pool_t * pool_create(uint32_t num_threads, pthread_f function)
 {
+    establish_handler(SIGUSR1, signal_handler);
     thread_pool_t * p_pool = calloc(sizeof(*p_pool), 1);
 
     if (p_pool == NULL)
@@ -101,12 +107,21 @@ void pool_add_work(thread_pool_t * p_pool, void * p_work)
     }
 }
 
+void pool_kill_all(thread_pool_t * p_pool)
+{
+    for(uint32_t i = 0; i < p_pool->num_threads; i++)
+    {
+        pthread_kill(p_pool->p_threads[i], SIGUSR1); // Signal to all threads to clean up and exit
+        pthread_cond_broadcast(&(p_pool->conditional_var)); // Broadcast to all threads to get passed conditional var
+    }
+}
+
 static void * thread_private(void * p_arg)
 {
     // Argument passed to private thread funciton is the pool struct
     thread_pool_t * p_pool = (thread_pool_t *)p_arg;
 
-    while (1)
+    while (exit_flag != 1)
     {
         pthread_mutex_lock(&(p_pool->lock)); // Lock mutex due to use of conditional variable
         void * work = NULL;
@@ -131,4 +146,31 @@ static void * thread_private(void * p_arg)
     }
     
     return NULL;
+}
+
+static void establish_handler(int sig, void (*func)(int))
+{
+    struct sigaction sa = { .sa_handler = func};
+    // Call sigaction to set signal handler to signal
+    if (sigaction(sig, &sa, NULL) == -1)
+    {
+        perror("Signal action failed.");
+    }
+}
+
+static void signal_handler(int sig)
+{
+    /*
+     * Performs a certain action depending on which signal was caught
+     */
+    switch (sig)
+    {
+        case SIGUSR1: ;
+            // If CTL+C caught, set accept_flag for exit
+            exit_flag = 1;
+            break;
+        default:
+            printf("Unknown signal caught: %d\n", sig);
+    }
+    
 }
