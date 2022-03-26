@@ -1,31 +1,10 @@
-CFLAGS = -Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal
-INCLUDE = -I../include/ -I../thread_pool/ -I../dstructs/
-export CFLAGS
-export INCLUDE
+sources := $(wildcard *.c)
+objects := $(patsubst %.c, %.o, $(sources))
 
 .PHONY: all
-all: src dstruct thread_pool test
+all: $(objects)
 
-test:
-	$(CC) $(CFLAGS) $(INCLUDE) -o test $(wildcard ./obj/*.o) -pthread
+$(objects): %.o: %.c
 
-.PHONY: src
-src:
-	$(MAKE) -C ./src/
-
-.PHONY: dstruct
-dstruct:
-	$(MAKE) -C ./dstructs/
-
-.PHONY: thread_pool
-thread_pool:
-	$(MAKE) -C ./thread_pool/
-
-.PHONY: debug
-debug: CFLAGS += -g
-debug: clean
-debug: all
-
-.PHONY: clean
-clean:
-	$(RM) ./obj/*.o test
+%.o:
+	$(CC) $(CFLAGS) $(INCLUDE) -o ../obj/$@ -c $^
