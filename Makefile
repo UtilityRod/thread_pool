@@ -1,13 +1,9 @@
 sources := $(wildcard *.c)
 objects := $(patsubst %.c, %.o, $(sources))
-INCLUDE = -I./stack/ -I./queue/
+INCLUDE += -I./queue/
 
 .PHONY: all
-all: $(objects) stack queue
-
-.PHONY: stack
-stack:
-	$(MAKE) -C stack/
+all: $(objects) queue
 
 .PHONY: queue
 queue:

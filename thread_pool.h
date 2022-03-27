@@ -1,7 +1,6 @@
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 
-#include <queue.h>
 #include <stdint.h>
 
 typedef struct thread_job_ thread_job_t;

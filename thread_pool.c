@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <queue.h>
 
 struct thread_pool_ {
     uint32_t num_threads; // The total amount of threads to spawn
