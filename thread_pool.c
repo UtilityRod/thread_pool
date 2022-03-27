@@ -15,13 +15,11 @@ struct thread_pool_ {
 };
 
 static void * thread_private(void * p_arg);
-static void establish_handler(int sig, void (*func)(int));
-static void signal_handler(int sig);
+
 volatile sig_atomic_t exit_flag = 0;
 
 thread_pool_t * pool_create(uint32_t num_threads, pthread_f function)
 {
-    establish_handler(SIGUSR1, signal_handler);
     thread_pool_t * p_pool = calloc(sizeof(*p_pool), 1);
 
     if (p_pool == NULL)
@@ -37,7 +35,6 @@ thread_pool_t * pool_create(uint32_t num_threads, pthread_f function)
         p_pool->conditional_var = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
         p_pool->function = function;
         // Lock the mutex to stop race condition for threads being spawned
-        pthread_mutex_lock(&(p_pool->lock));
         p_pool->p_queue = queue_create(NULL, NULL);
         p_pool->p_threads = calloc(sizeof(pthread_t *), num_threads);
 
@@ -63,8 +60,6 @@ thread_pool_t * pool_create(uint32_t num_threads, pthread_f function)
                 pthread_create(&(p_pool->p_threads[i]), NULL, thread_private, p_pool);
             }
         }
-        // Unlock the mutex to allow access to critical code
-        pthread_mutex_unlock(&(p_pool->lock));
     }
 
     return p_pool;
@@ -74,15 +69,8 @@ void pool_destroy(thread_pool_t * p_pool)
 {
     if (p_pool != NULL)
     {
-        // If the queue exists destroy it
-        if (p_pool->p_queue)
-        {
-            queue_destroy(p_pool->p_queue);
-        }
-
         // If the thread array exists, destroy all threads
-        // TODO: find a way to cleanly kill all threads in the thread pool
-        if (p_pool->p_threads)
+        if (p_pool->p_threads != NULL)
         {
             for (uint32_t i = 0; i < p_pool->num_threads; i++)
             {
@@ -90,6 +78,11 @@ void pool_destroy(thread_pool_t * p_pool)
             }
 
             free(p_pool->p_threads);
+        }
+        // If the queue exists destroy it
+        if (p_pool->p_queue)
+        {
+            queue_destroy(p_pool->p_queue);
         }
 
         free(p_pool);
@@ -110,11 +103,8 @@ void pool_add_work(thread_pool_t * p_pool, void * p_work)
 
 void pool_kill_all(thread_pool_t * p_pool)
 {
-    for(uint32_t i = 0; i < p_pool->num_threads; i++)
-    {
-        pthread_kill(p_pool->p_threads[i], SIGUSR1); // Signal to all threads to clean up and exit
-        pthread_cond_broadcast(&(p_pool->conditional_var)); // Broadcast to all threads to get passed conditional var
-    }
+    exit_flag = 1;
+    pthread_cond_broadcast(&(p_pool->conditional_var)); // Broadcast to all threads to get passed conditional var
 }
 
 static void * thread_private(void * p_arg)
@@ -122,19 +112,22 @@ static void * thread_private(void * p_arg)
     // Argument passed to private thread funciton is the pool struct
     thread_pool_t * p_pool = (thread_pool_t *)p_arg;
 
-    while (exit_flag != 1)
+    for(;;)
     {
         pthread_mutex_lock(&(p_pool->lock)); // Lock mutex due to use of conditional variable
-        void * work = NULL;
         // Try to dequeue work off the queue
-        if ((work = queue_dequeue(p_pool->p_queue)) == NULL)
+        while (queue_get_size(p_pool->p_queue) == 0) 
         {
+            if (exit_flag != 0)
+            {
+                pthread_mutex_unlock(&(p_pool->lock));
+                return NULL;
+            }
             // No work in the queue, so wait on the conditional variable
             pthread_cond_wait(&(p_pool->conditional_var), &(p_pool->lock));
-            // Thread has woken up, try to dequeue work again
-            work = queue_dequeue(p_pool->p_queue);
         }
 
+        void * work = queue_dequeue(p_pool->p_queue);
         // Unlock access to the queue
         pthread_mutex_unlock(&(p_pool->lock));
 
@@ -148,30 +141,4 @@ static void * thread_private(void * p_arg)
     
     return NULL;
 }
-
-static void establish_handler(int sig, void (*func)(int))
-{
-    struct sigaction sa = { .sa_handler = func};
-    // Call sigaction to set signal handler to signal
-    if (sigaction(sig, &sa, NULL) == -1)
-    {
-        perror("Signal action failed.");
-    }
-}
-
-static void signal_handler(int sig)
-{
-    /*
-     * Performs a certain action depending on which signal was caught
-     */
-    switch (sig)
-    {
-        case SIGUSR1: ;
-            // If CTL+C caught, set accept_flag for exit
-            exit_flag = 1;
-            break;
-        default:
-            printf("Unknown signal caught: %d\n", sig);
-    }
-    
-}
+// END OF SOURCE
