@@ -6,4 +6,4 @@ dstruct_add_structures(queue)
 
 add_library(tpool SHARED ${CMAKE_CURRENT_SOURCE_DIR}/thread_pool.c)
 target_include_directories(tpool PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(tpool dstruct)
+target_link_libraries(tpool dstruct pthread)
