@@ -1,0 +1,3 @@
+[submodule "dstruct"]
+	path = dstruct
+	url = git@github.com:UtilityRod/dstruct.git
